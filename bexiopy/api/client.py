@@ -26,17 +26,18 @@ class BexioAPIClient:
 
         self.BASE_URL = f'{self.BEXIO_BASE_URL}{api_version}'
 
-        self.r = requests.Session()
-        self.r.headers['Accept'] = 'application/json'
-        self.r.headers['Content-Type'] = 'application/json'
-        self.r.headers['Authorization'] = f'Bearer {self.api_key}'
+        self.headers = {
+            'Authorization': f'Bearer {self.api_key}',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
 
     def call(self, method, endpoint, **kwargs):
         data = None
         if 'data' in kwargs and kwargs['data'] is not None:
             data = json.dumps(kwargs['data'])
 
-        response = getattr(self.r, method)(f'{self.BASE_URL}{endpoint}', data=data)
+        response = getattr(requests, method)(f'{self.BASE_URL}{endpoint}', data=data, headers=self.headers)
 
         if response.status_code not in [200, 201, 204]:
             raise BexioAPIException(response.json())

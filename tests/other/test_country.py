@@ -1,29 +1,32 @@
 from typing import List
+from unittest.mock import patch
 
-from bexiopy.other.countries import get_countries, get_country, create_country, delete_country
-from bexiopy.other.models import Country, CountryPost
-
-
-def test_get_countries():
-    countries: List[Country] = get_countries()
-    assert len(countries) is not 0
+from bexiopy.other.countries import get_country, get_countries
+from bexiopy.other.models import Country
+from tests.other.factroeris import CountryFactory
 
 
-def test_get_country():
-    countries: List[Country] = get_countries()
-    country_id: int = countries[0].id
+@patch('bexiopy.api.client.requests.get')
+def test_get_countries(mock_get):
+    countries: List[Country] = CountryFactory.batch(5)
 
-    country: Country = get_country(country_id)
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = countries
 
-    assert country.id == country_id
+    r_countries: List[Country] = get_countries()
+
+    assert mock_get.called
+    assert r_countries == countries
 
 
-def test_create_country():
-    country: Country = create_country(
-        CountryPost(
-            name='TestCountry',
-            name_short='TC',
-            iso3166_alpha2='CH'
-        )
-    )
-    delete_country(country.id)
+@patch('bexiopy.api.client.requests.get')
+def test_get_country(mock_get):
+    country: Country = CountryFactory.build()
+
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = country
+
+    r_country: Country = get_country(1)
+
+    assert mock_get.called
+    assert r_country == country
